@@ -225,6 +225,7 @@ const Chat = () => {
       contentType: "text",
       date: new Date().toISOString(),
       image: uploadedImage,
+      system_message: systemMessage,
     };
 
     if (uploadedImage !== "") {

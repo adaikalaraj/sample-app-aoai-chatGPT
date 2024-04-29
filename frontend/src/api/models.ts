@@ -34,6 +34,7 @@ export type ChatMessage = {
   contentType?: "text" | "image" | "both";
   contentBody?: string;
   image?: any;
+  system_message?: string;
   isFirstMessage?: boolean;
 };
 
