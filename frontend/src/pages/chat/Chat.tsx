@@ -11,21 +11,20 @@ import {
   Dialog,
   DialogType,
   Stack,
-  Image,
+  TextField,
+  PrimaryButton,
 } from "@fluentui/react";
 import {
   SquareRegular,
   ShieldLockRegular,
   ErrorCircleRegular,
 } from "@fluentui/react-icons";
-
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import uuid from "react-uuid";
 import { isEmpty } from "lodash";
 import DOMPurify from "dompurify";
-
 import styles from "./Chat.module.css";
 import Contoso from "../../assets/Contoso.svg";
 import { XSSAllowTags } from "../../constants/xssAllowTags";
@@ -78,6 +77,18 @@ const Chat = () => {
   const [hideErrorDialog, { toggle: toggleErrorDialog }] = useBoolean(true);
   const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>();
   const [uploadedImage, setuploadedImage] = useState<string>();
+  const [systemMessage, setSystemMessage] = useState(
+    localStorage.getItem("systemMessage") ||
+      "You are an AI assistant that helps people find information."
+  );
+
+  const onChangeSystemMessage = (event: any) => {
+    setSystemMessage(event.target.value);
+  };
+
+  const saveSystemMessage = () => {
+    localStorage.setItem("systemMessage", systemMessage);
+  };
 
   const hiddenFileInput = useRef<any>(null);
 
@@ -214,18 +225,20 @@ const Chat = () => {
       contentType: "text",
       date: new Date().toISOString(),
       image: uploadedImage,
+      system_message: systemMessage,
     };
 
-    if(uploadedImage !== "") {
-        setuploadedImage("");
+    if (uploadedImage !== "") {
+      setuploadedImage("");
     }
 
     let conversation: Conversation | null | undefined;
+
     if (!conversationId) {
       conversation = {
         id: conversationId ?? uuid(),
         title: question,
-        messages: [userMessage],
+        messages: [{ ...userMessage, isFirstMessage: true }],
         date: new Date().toISOString(),
       };
     } else {
@@ -864,7 +877,7 @@ const Chat = () => {
                             <div
                               className={styles.chatBothImageText}
                               dangerouslySetInnerHTML={{
-                                __html:  `
+                                __html: `
         <p>${answer.content}</p>
         <img src="${answer.image}" />
       `,
@@ -948,6 +961,21 @@ const Chat = () => {
                   </span>
                 </Stack>
               )}
+              <Stack className={styles.chatSystemMessageContainer}>
+                <TextField
+                  label="System Message"
+                  multiline
+                  rows={4}
+                  value={systemMessage}
+                  resizable={false}
+                  onChange={onChangeSystemMessage}
+                />
+                <PrimaryButton
+                  text="Save"
+                  onClick={saveSystemMessage}
+                  className={styles.chatSystemMessageSaveBtn}
+                />
+              </Stack>
               <Stack>
                 {appStateContext?.state.isCosmosDBAvailable?.status !==
                   CosmosDBStatus.NotConfigured && (
@@ -1055,10 +1083,13 @@ const Chat = () => {
                   appStateContext?.state.isCosmosDBAvailable?.cosmosDB
                     ? makeApiRequestWithCosmosDB(question, id)
                     : makeApiRequestWithoutCosmosDB(question, id);
+                  hiddenFileInput.current.files = null;
+                  hiddenFileInput.current.value = null;
                   setuploadedImage(undefined);
                 }}
                 onTextboxClear={() => {
-                  console.log("clear");
+                  hiddenFileInput.current.files = null;
+                  hiddenFileInput.current.value = null;
                   setuploadedImage(undefined);
                 }}
                 conversationId={
