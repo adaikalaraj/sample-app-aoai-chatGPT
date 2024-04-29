@@ -31,7 +31,6 @@ export type ChatMessage = {
   date: string;
   feedback?: Feedback;
   context?: string;
-  contentType?: "text" | "image" | "both";
   contentBody?: string;
   image?: any;
   system_message?: string;

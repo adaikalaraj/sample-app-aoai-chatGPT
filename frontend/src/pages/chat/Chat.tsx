@@ -222,7 +222,6 @@ const Chat = () => {
       id: uuid(),
       role: "user",
       content: question,
-      contentType: "text",
       date: new Date().toISOString(),
       image: uploadedImage,
       system_message: systemMessage,
