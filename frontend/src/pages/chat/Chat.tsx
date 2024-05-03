@@ -50,6 +50,7 @@ import { QuestionInput } from "../../components/QuestionInput";
 import { ChatHistoryPanel } from "../../components/ChatHistory/ChatHistoryPanel";
 import { AppStateContext } from "../../state/AppProvider";
 import { useBoolean } from "@fluentui/react-hooks";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 const enum messageStatus {
   NotRunning = "Not Running",
@@ -81,14 +82,41 @@ const Chat = () => {
     localStorage.getItem("systemMessage") ||
       "You are an AI assistant that helps people find information."
   );
+  const [openSytemMessageConfirmDialog, setSytemMessageConfirmDialog] =
+    useState(false);
 
   const onChangeSystemMessage = (event: any) => {
     setSystemMessage(event.target.value);
   };
 
   const saveSystemMessage = () => {
-    localStorage.setItem("systemMessage", systemMessage);
+    const storedSystemMessage = localStorage.getItem("systemMessage");
+
+    if (!disabledButton() && storedSystemMessage !== systemMessage) {
+      setSytemMessageConfirmDialog(true);
+      return;
+    }
+    if (storedSystemMessage !== systemMessage) {
+      localStorage.setItem("systemMessage", systemMessage);
+    }
   };
+
+  const onContinue = () => {
+    localStorage.setItem("systemMessage", systemMessage);
+    setSytemMessageConfirmDialog(false);
+    appStateContext?.state.isCosmosDBAvailable?.status !==
+    CosmosDBStatus.NotConfigured
+      ? clearChat()
+      : newChat();
+  };
+
+  const onCancel = () => {
+    setSytemMessageConfirmDialog(false);
+    setSystemMessage(localStorage.getItem("systemMessage")!);
+  };
+
+  const isApplyChangesButtonDisabled = () =>
+    systemMessage === localStorage.getItem("systemMessage");
 
   const hiddenFileInput = useRef<any>(null);
 
@@ -803,6 +831,13 @@ const Chat = () => {
 
   return (
     <div className={styles.container} role="main">
+      {openSytemMessageConfirmDialog && (
+        <ConfirmDialog
+          open={openSytemMessageConfirmDialog}
+          onContinue={onContinue}
+          onCancel={onCancel}
+        />
+      )}
       {showAuthMessage ? (
         <Stack className={styles.chatEmptyState}>
           <ShieldLockRegular
@@ -970,7 +1005,8 @@ const Chat = () => {
                   onChange={onChangeSystemMessage}
                 />
                 <PrimaryButton
-                  text="Save"
+                  text="Apply Changes"
+                  disabled={isApplyChangesButtonDisabled()}
                   onClick={saveSystemMessage}
                   className={styles.chatSystemMessageSaveBtn}
                 />
