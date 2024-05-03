@@ -377,6 +377,10 @@ a {
   margin-top: 0;
 }
 
+.systemMessageConfirmDialog {
+  min-width: 50vw;
+}
+
 @media (max-width: 480px) {
   .chatInput {
     width: 90%;
