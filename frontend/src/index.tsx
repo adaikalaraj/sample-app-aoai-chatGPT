@@ -10,7 +10,7 @@ import NoPage from "./pages/NoPage";
 import Chat from "./pages/chat/Chat";
 import { AppStateProvider } from "./state/AppProvider";
 
-initializeIcons();
+initializeIcons("https://res.cdn.office.net/files/fabric-cdn-prod_20241209.001/assets/icons/");
 
 export default function App() {
     return (
