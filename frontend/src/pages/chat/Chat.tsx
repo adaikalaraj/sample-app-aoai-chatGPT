@@ -104,6 +104,24 @@ const Chat = () => {
     };
   };
 
+  // Handle paste event for images
+  const handlePaste = (event: React.ClipboardEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+    const items = event.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = () => setuploadedImage(reader.result as string);
+          reader.readAsDataURL(file);
+          event.preventDefault();
+          break;
+        }
+      }
+    }
+  };
+
   const errorDialogContentProps = {
     type: DialogType.close,
     title: errorMsg?.title,
@@ -1091,6 +1109,7 @@ const Chat = () => {
                   hiddenFileInput.current.value = null;
                   setuploadedImage(undefined);
                 }}
+                onPaste={handlePaste}
                 conversationId={
                   appStateContext?.state.currentChat?.id
                     ? appStateContext?.state.currentChat?.id

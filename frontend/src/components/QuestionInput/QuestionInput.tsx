@@ -19,6 +19,7 @@ interface Props {
   clearOnSend?: boolean;
   conversationId?: string;
   imageSrc?: string;
+  onPaste?: (event: React.ClipboardEvent<HTMLTextAreaElement | HTMLInputElement>) => void;
 }
 
 export const QuestionInput = ({
@@ -29,6 +30,7 @@ export const QuestionInput = ({
   conversationId,
   imageSrc,
   onTextboxClear,
+  onPaste,
 }: Props) => {
   const [question, setQuestion] = useState<string>("");
 
@@ -89,6 +91,7 @@ export const QuestionInput = ({
         value={question}
         onChange={onQuestionChange}
         onKeyDown={onEnterPress}
+        onPaste={onPaste}
       />
       <CommandBarButton
         role="button"
