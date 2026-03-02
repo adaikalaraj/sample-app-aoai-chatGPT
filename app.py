@@ -746,7 +746,7 @@ def prepare_model_args(request_body):
     model_args = {
         "messages": messages,
         "temperature": float(AZURE_OPENAI_TEMPERATURE),
-        "max_tokens": int(AZURE_OPENAI_MAX_TOKENS),
+        "max_completion_tokens": int(AZURE_OPENAI_MAX_TOKENS),
         "top_p": float(AZURE_OPENAI_TOP_P),
         # "stop": (
         #     parse_multi_columns(AZURE_OPENAI_STOP_SEQUENCE)
