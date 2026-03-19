@@ -1,3 +1,10 @@
+:root {
+    --color-primary: #D80000;
+    --color-secondary: #0e2d5b;
+    --color-primary-hover: rgba(216, 0, 0, 0.8);
+    --color-secondary-hover: rgba(14, 45, 91, 0.8);
+}
+
 * {
     box-sizing: border-box;
 }

@@ -30,6 +30,21 @@
     position: relative;
 }
 
+.actionButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 2px;
+}
+
+.actionButton:hover {
+    background: var(--color-secondary-hover);
+}
+
 .answerFooter {
     display: flex;
     flex-flow: row nowrap;
@@ -74,7 +89,7 @@
     font-size: 12px;
     line-height: 16px;
 
-    color: #115EA3;
+    color: var(--color-secondary);
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -175,6 +190,32 @@
 .clickableSup:hover {
     text-decoration: underline;
     cursor: pointer;
+}
+
+.codeBlockWrapper {
+    position: relative;
+}
+
+.codeBlockCopyButton {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    z-index: 1;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    padding: 2px 6px;
+    font-size: 12px;
+    line-height: 16px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.codeBlockCopyButton:hover {
+    background: var(--color-secondary-hover);
 }
 
 sup {

@@ -193,8 +193,14 @@
   left: 7px;
   top: 13px;
   color: #ffffff;
+  background: var(--color-secondary);
   border-radius: 4px;
   z-index: 1;
+  cursor: pointer;
+}
+
+.clearChatBroom:hover {
+  background:  var(--color-secondary-hover)
 }
 
 .clearChatBroomNoCosmos {
@@ -211,8 +217,12 @@
   color: #ffffff;
   border-radius: 4px;
   z-index: 1;
+   background: var(--color-secondary);
 }
-
+ 
+.clearChatBroomNoCosmos:hover {
+  background:  var(--color-secondary-hover)
+}
 .newChatIcon {
   box-sizing: border-box;
   display: flex;
@@ -227,8 +237,12 @@
   color: #ffffff;
   border-radius: 4px;
   z-index: 1;
+  background: var(--color-secondary);
 }
+.newChatIcon:hover {
+    background:  var(--color-secondary-hover)
 
+}
 .stopGeneratingContainer {
   box-sizing: border-box;
   display: flex;
