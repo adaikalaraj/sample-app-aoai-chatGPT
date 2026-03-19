@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState, useContext } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState, useContext } from "react";
 import { useBoolean } from "@fluentui/react-hooks"
 import { Checkbox, DefaultButton, Dialog, FontIcon, Stack, Text } from "@fluentui/react";
 import DOMPurify from 'dompurify';
@@ -14,8 +14,10 @@ import remarkGfm from "remark-gfm";
 import supersub from 'remark-supersub'
 import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
 import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { ThumbDislike20Filled, ThumbLike20Filled, Copy20Regular, Checkmark20Regular, ArrowClockwise20Regular, Square20Regular } from "@fluentui/react-icons";
+import { ThumbDislike20Filled, ThumbLike20Filled, Copy20Regular, Checkmark20Regular, ArrowClockwise20Regular, Square20Regular, Eye20Regular, Edit20Regular } from "@fluentui/react-icons";
 import { XSSAllowTags } from "../../constants/xssAllowTags";
+import { CodePreview } from "../CodePreview/CodePreview";
+import { CodeEditor } from "../CodeEditor/CodeEditor";
 
 interface Props {
     answer: AskResponse;
@@ -27,12 +29,16 @@ interface Props {
 
 const CodeBlock = ({node, ...props}: {node: any, [key: string]: any}) => {
     const [copied, setCopied] = useState(false);
-    let language;
+    const [showPreview, setShowPreview] = useState(false);
+    const [showEditor, setShowEditor] = useState(false);
+    const panelRef = useRef<HTMLDivElement>(null);
+    let language: string | undefined;
     if (props.className) {
         const match = props.className.match(/language-(\w+)/);
         language = match ? match[1] : undefined;
     }
     const codeString = node.children[0].value ?? '';
+    const isPreviewable = language === 'svg' || language === 'html';
 
     const handleCopy = () => {
         navigator.clipboard.writeText(codeString);
@@ -40,14 +46,52 @@ const CodeBlock = ({node, ...props}: {node: any, [key: string]: any}) => {
         setTimeout(() => setCopied(false), 2000);
     };
 
+    const scrollToPanel = () => {
+        setTimeout(() => panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+    };
+
+    const handlePreviewToggle = () => {
+        const opening = !showPreview;
+        setShowPreview(opening);
+        setShowEditor(false);
+        if (opening) scrollToPanel();
+    };
+
+    const handleEditorToggle = () => {
+        const opening = !showEditor;
+        setShowEditor(opening);
+        setShowPreview(false);
+        if (opening) scrollToPanel();
+    };
+
     return (
         <div className={styles.codeBlockWrapper}>
-            <button className={styles.codeBlockCopyButton} onClick={handleCopy} aria-label="Copy code" title={copied ? "Copied!" : "Copy code"}>
-                {copied ? <Checkmark20Regular /> : <Copy20Regular />}
-            </button>
+            <div className={styles.codeBlockActions}>
+                {isPreviewable && (
+                    <>
+                        <button className={styles.codeBlockCopyButton} onClick={handlePreviewToggle} aria-label="Preview" title="Preview">
+                            <Eye20Regular />
+                        </button>
+                        <button className={styles.codeBlockCopyButton} onClick={handleEditorToggle} aria-label="Edit" title="Edit">
+                            <Edit20Regular />
+                        </button>
+                    </>
+                )}
+                <button className={styles.codeBlockCopyButton} onClick={handleCopy} aria-label="Copy code" title={copied ? "Copied!" : "Copy code"}>
+                    {copied ? <Checkmark20Regular /> : <Copy20Regular />}
+                </button>
+            </div>
             <SyntaxHighlighter style={nord} language={language} PreTag="div" {...props}>
                 {codeString}
             </SyntaxHighlighter>
+            <div ref={panelRef}>
+                {showPreview && isPreviewable && (
+                    <CodePreview code={codeString} language={language as "svg" | "html"} onClose={() => setShowPreview(false)} />
+                )}
+                {showEditor && isPreviewable && (
+                    <CodeEditor code={codeString} language={language as "svg" | "html"} onClose={() => setShowEditor(false)} />
+                )}
+            </div>
         </div>
     );
 };
