@@ -14,18 +14,58 @@ import remarkGfm from "remark-gfm";
 import supersub from 'remark-supersub'
 import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
 import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { ThumbDislike20Filled, ThumbLike20Filled } from "@fluentui/react-icons";
+import { ThumbDislike20Filled, ThumbLike20Filled, Copy20Regular, Checkmark20Regular, ArrowClockwise20Regular, Square20Regular } from "@fluentui/react-icons";
 import { XSSAllowTags } from "../../constants/xssAllowTags";
 
 interface Props {
     answer: AskResponse;
     onCitationClicked: (citedDocument: Citation) => void;
+    onRegenerateClicked?: () => void;
+    onStopClicked?: () => void;
+    isStreaming?: boolean;
 }
+
+const CodeBlock = ({node, ...props}: {node: any, [key: string]: any}) => {
+    const [copied, setCopied] = useState(false);
+    let language;
+    if (props.className) {
+        const match = props.className.match(/language-(\w+)/);
+        language = match ? match[1] : undefined;
+    }
+    const codeString = node.children[0].value ?? '';
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(codeString);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    return (
+        <div className={styles.codeBlockWrapper}>
+            <button className={styles.codeBlockCopyButton} onClick={handleCopy} aria-label="Copy code" title={copied ? "Copied!" : "Copy code"}>
+                {copied ? <Checkmark20Regular /> : <Copy20Regular />}
+            </button>
+            <SyntaxHighlighter style={nord} language={language} PreTag="div" {...props}>
+                {codeString}
+            </SyntaxHighlighter>
+        </div>
+    );
+};
 
 export const Answer = ({
     answer,
-    onCitationClicked
+    onCitationClicked,
+    onRegenerateClicked,
+    onStopClicked,
+    isStreaming
 }: Props) => {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopyResponse = () => {
+        navigator.clipboard.writeText(answer.answer);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 3000);
+    };
     const initializeAnswerFeedback = (answer: AskResponse) => {
         if (answer.message_id == undefined) return undefined;
         if (answer.feedback == undefined) return undefined;
@@ -161,7 +201,7 @@ export const Answer = ({
                 <Checkbox label="Inaccurate or irrelevant" id={Feedback.InaccurateOrIrrelevant} defaultChecked={negativeFeedbackList.includes(Feedback.InaccurateOrIrrelevant)} onChange={updateFeedbackList}></Checkbox>
                 <Checkbox label="Other" id={Feedback.OtherUnhelpful} defaultChecked={negativeFeedbackList.includes(Feedback.OtherUnhelpful)} onChange={updateFeedbackList}></Checkbox>
             </Stack>
-            <div onClick={() => setShowReportInappropriateFeedback(true)} style={{ color: "#115EA3", cursor: "pointer"}}>Report inappropriate content</div>
+            <div onClick={() => setShowReportInappropriateFeedback(true)} style={{ color: "var(--color-secondary)", cursor: "pointer"}}>Report inappropriate content</div>
         </>);
     }
 
@@ -181,19 +221,7 @@ export const Answer = ({
     }
 
     const components = {
-        code({node, ...props}: {node: any, [key: string]: any}) {
-            let language;
-            if (props.className) {
-                const match = props.className.match(/language-(\w+)/);
-                language = match ? match[1] : undefined;
-            }
-            const codeString = node.children[0].value ?? '';
-            return (
-                <SyntaxHighlighter style={nord} language={language} PreTag="div" {...props}>
-                    {codeString}
-                </SyntaxHighlighter>
-            );
-        },
+        code: CodeBlock,
     };
     return (
         <>
@@ -211,24 +239,69 @@ export const Answer = ({
                             />
                         </Stack.Item>
                         <Stack.Item className={styles.answerHeader}>
-                            {FEEDBACK_ENABLED && answer.message_id !== undefined && <Stack horizontal horizontalAlign="space-between">
-                                <ThumbLike20Filled
-                                    aria-hidden="false"
-                                    aria-label="Like this response"
-                                    onClick={() => onLikeResponseClicked()}
-                                    style={feedbackState === Feedback.Positive || appStateContext?.state.feedbackState[answer.message_id] === Feedback.Positive ? 
-                                        { color: "darkgreen", cursor: "pointer" } : 
-                                        { color: "slategray", cursor: "pointer" }}
-                                />
-                                <ThumbDislike20Filled
-                                    aria-hidden="false"
-                                    aria-label="Dislike this response"
-                                    onClick={() => onDislikeResponseClicked()}
-                                    style={(feedbackState !== Feedback.Positive && feedbackState !== Feedback.Neutral && feedbackState !== undefined) ? 
-                                        { color: "darkred", cursor: "pointer" } : 
-                                        { color: "slategray", cursor: "pointer" }}
-                                />
-                            </Stack>}
+                            <Stack horizontal horizontalAlign="space-between" tokens={{ childrenGap: 4 }}>
+                                {!isStreaming && answer.answer && (
+                                    <span title={copied ? "Copied!" : "Copy"} className={styles.actionButton}>
+                                        {copied ? (
+                                            <Checkmark20Regular
+                                                aria-hidden="false"
+                                                aria-label="Copied"
+                                                style={{ color: "var(--color-secondary)", cursor: "pointer" }}
+                                            />
+                                        ) : (
+                                            <Copy20Regular
+                                                aria-hidden="false"
+                                                aria-label="Copy response"
+                                                onClick={handleCopyResponse}
+                                                style={{ color: "var(--color-secondary)", cursor: "pointer" }}
+                                            />
+                                        )}
+                                    </span>
+                                )}
+                                {/* Regenerate/Stop button hidden for now - functions preserved for future use
+                                {(onRegenerateClicked || isStreaming) && (
+                                    <span title={isStreaming ? "Stop generating" : "Regenerate"} className={styles.actionButton}>
+                                        {isStreaming ? (
+                                            <Square20Regular
+                                                aria-hidden="false"
+                                                aria-label="Stop generating"
+                                                onClick={onStopClicked}
+                                                style={{ color: "var(--color-primary)", cursor: "pointer" }}
+                                            />
+                                        ) : (
+                                            <ArrowClockwise20Regular
+                                                aria-hidden="false"
+                                                aria-label="Regenerate response"
+                                                onClick={onRegenerateClicked}
+                                                style={{ color: "var(--color-secondary)", cursor: "pointer" }}
+                                            />
+                                        )}
+                                    </span>
+                                )}
+                                */}
+                            {FEEDBACK_ENABLED && answer.message_id !== undefined && <>
+                                <span title="Like this response" className={styles.actionButton}>
+                                    <ThumbLike20Filled
+                                        aria-hidden="false"
+                                        aria-label="Like this response"
+                                        onClick={() => onLikeResponseClicked()}
+                                        style={feedbackState === Feedback.Positive || appStateContext?.state.feedbackState[answer.message_id] === Feedback.Positive ?
+                                            { color: "#0e2d5b", cursor: "pointer" } :
+                                            { color: "slategray", cursor: "pointer" }}
+                                    />
+                                </span>
+                                <span title="Dislike this response" className={styles.actionButton}>
+                                    <ThumbDislike20Filled
+                                        aria-hidden="false"
+                                        aria-label="Dislike this response"
+                                        onClick={() => onDislikeResponseClicked()}
+                                        style={(feedbackState !== Feedback.Positive && feedbackState !== Feedback.Neutral && feedbackState !== undefined) ?
+                                            { color: "#D80000", cursor: "pointer" } :
+                                            { color: "slategray", cursor: "pointer" }}
+                                    />
+                                </span>
+                            </>}
+                            </Stack>
                         </Stack.Item>
                     </Stack>
                     

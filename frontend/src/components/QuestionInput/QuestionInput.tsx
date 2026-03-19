@@ -96,12 +96,26 @@ export const QuestionInput = ({
       <CommandBarButton
         role="button"
         styles={{
+          root: {
+            cursor: "pointer",
+          },
           icon: {
-            color: "#2d87c3",
+            color: "var(--color-primary)",
             fontSize: "22px",
           },
+          rootHovered: {
+            background: "transparent",
+            color: "var(--color-primary)",
+            opacity: 0.8,
+            cursor: "pointer",
+          },
+          rootPressed: {
+            background: "transparent",
+            color: "var(--color-primary)",
+            opacity: 0.8,
+          },
           iconDisabled: {
-            color: "#BDBDBD !important",
+              color: "#BDBDBD !important",
           },
           rootDisabled: {
             background: "transparent",

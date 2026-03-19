@@ -42,7 +42,7 @@
 }
 
 .actionButton:hover {
-    background: var(--color-secondary-hover);
+   background: #E0E0E0;
 }
 
 .answerFooter {

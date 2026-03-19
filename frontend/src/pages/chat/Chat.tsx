@@ -79,7 +79,7 @@ const Chat = () => {
   const [uploadedImage, setuploadedImage] = useState<string>();
   const [systemMessage, setSystemMessage] = useState(
     localStorage.getItem("systemMessage") ||
-      "You are an AI assistant that helps people find information."
+    "You are an AI assistant that helps people find information."
   );
 
   const onChangeSystemMessage = (event: any) => {
@@ -136,17 +136,50 @@ const Chat = () => {
     styles: { main: { maxWidth: 450 } },
   };
 
+ const chatButtonStyles = {
+  root: {
+    color: "#FFFFFF",
+    background: "var(--color-secondary)"
+  },
+  rootHovered: {
+    color: "#FFFFFF",
+    background: "var(--color-primary)"
+  },
+  rootPressed: {
+    color: "#FFFFFF",
+    background: "var(--color-primary)"
+  },
+  rootDisabled: {
+    background: "#F0F0F0",
+    color: "#BDBDBD"
+  },
+
+  // 👇 Icon styles (important)
+  icon: {
+    color: "#FFFFFF"
+  },
+  iconHovered: {
+    color: "#FFFFFF"
+  },
+  iconPressed: {
+    color: "#FFFFFF"
+  },
+  iconDisabled: {
+    color: "#BDBDBD"
+  }
+};
+
   const [ASSISTANT, TOOL, ERROR] = ["assistant", "tool", "error"];
   const NO_CONTENT_ERROR = "No content in messages object.";
 
   useEffect(() => {
     if (
       appStateContext?.state.isCosmosDBAvailable?.status !==
-        CosmosDBStatus.Working &&
+      CosmosDBStatus.Working &&
       appStateContext?.state.isCosmosDBAvailable?.status !==
-        CosmosDBStatus.NotConfigured &&
+      CosmosDBStatus.NotConfigured &&
       appStateContext?.state.chatHistoryLoadingState ===
-        ChatHistoryLoadingState.Fail &&
+      ChatHistoryLoadingState.Fail &&
       hideErrorDialog
     ) {
       let subtitle = `${appStateContext.state.isCosmosDBAvailable.status}. Please contact the site administrator.`;
@@ -168,7 +201,7 @@ const Chat = () => {
   useEffect(() => {
     setIsLoading(
       appStateContext?.state.chatHistoryLoadingState ===
-        ChatHistoryLoadingState.Loading
+      ChatHistoryLoadingState.Loading
     );
   }, [appStateContext?.state.chatHistoryLoadingState]);
 
@@ -215,11 +248,11 @@ const Chat = () => {
       isEmpty(toolMessage)
         ? setMessages([...messages, userMessage, assistantMessage])
         : setMessages([
-            ...messages,
-            userMessage,
-            toolMessage,
-            assistantMessage,
-          ]);
+          ...messages,
+          userMessage,
+          toolMessage,
+          assistantMessage,
+        ]);
     } else {
       isEmpty(toolMessage)
         ? setMessages([...messages, assistantMessage])
@@ -784,7 +817,30 @@ const Chat = () => {
 
   useLayoutEffect(() => {
     chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
-  }, [showLoadingMessage, processMessages]);
+  }, [showLoadingMessage, processMessages, messages]);
+
+  const onRegenerateResponse = () => {
+    if (isLoading || messages.length < 2) return;
+    // Find the last user message
+    const lastUserIndex = [...messages].reverse().findIndex(m => m.role === "user");
+    if (lastUserIndex === -1) return;
+    const actualIndex = messages.length - 1 - lastUserIndex;
+    const lastUserMessage = messages[actualIndex];
+    // Remove messages from the last user message onward
+    const trimmedMessages = messages.slice(0, actualIndex);
+    setMessages(trimmedMessages);
+    if (appStateContext?.state.currentChat) {
+      const updatedChat = { ...appStateContext.state.currentChat, messages: trimmedMessages };
+      appStateContext.dispatch({ type: "UPDATE_CURRENT_CHAT", payload: updatedChat });
+    }
+    // Re-send the question
+    const conversationId = appStateContext?.state.currentChat?.id;
+    if (appStateContext?.state.isCosmosDBAvailable?.cosmosDB) {
+      makeApiRequestWithCosmosDB(lastUserMessage.content, conversationId);
+    } else {
+      makeApiRequestWithoutCosmosDB(lastUserMessage.content, conversationId);
+    }
+  };
 
   const onShowCitation = (citation: Citation) => {
     setActiveCitation(citation);
@@ -815,7 +871,7 @@ const Chat = () => {
       (messages && messages.length === 0) ||
       clearingChat ||
       appStateContext?.state.chatHistoryLoadingState ===
-        ChatHistoryLoadingState.Loading
+      ChatHistoryLoadingState.Loading
     );
   };
 
@@ -915,6 +971,13 @@ const Chat = () => {
                             feedback: answer.feedback,
                           }}
                           onCitationClicked={(c) => onShowCitation(c)}
+                          onRegenerateClicked={
+                            index === messages.length - 1 && !isLoading
+                              ? onRegenerateResponse
+                              : undefined
+                          }
+                          isStreaming={index === messages.length - 1 && isLoading}
+                          onStopClicked={index === messages.length - 1 && isLoading ? stopGenerating : undefined}
                         />
                       </div>
                     ) : answer.role === ERROR ? (
@@ -945,6 +1008,7 @@ const Chat = () => {
                           citations: [],
                         }}
                         onCitationClicked={() => null}
+                        isStreaming={true}
                       />
                     </div>
                   </>
@@ -985,63 +1049,54 @@ const Chat = () => {
                   rows={4}
                   value={systemMessage}
                   resizable={false}
+                   borderless
+                   
                   onChange={onChangeSystemMessage}
+                  styles={{
+                    fieldGroup: {
+                      borderRadius: "8px",
+                      boxShadow: "0 0 0 1px var(--color-secondary)",
+                    }
+                  }}
                 />
                 <PrimaryButton
                   text="Save"
                   onClick={saveSystemMessage}
                   className={styles.chatSystemMessageSaveBtn}
+                  styles={{
+                    root: {
+                      background: "var(--color-primary)",
+                      borderRadius: "8px",
+                      border: "none",
+                    },
+                    rootHovered: {
+                      background: "var(--color-primary-hover)",
+                       border: "none",
+                    }
+                  }}
                 />
               </Stack>
               <Stack>
                 {appStateContext?.state.isCosmosDBAvailable?.status !==
                   CosmosDBStatus.NotConfigured && (
-                  <CommandBarButton
-                    role="button"
-                    styles={{
-                      icon: {
-                        color: "#FFFFFF",
-                      },
-                      iconDisabled: {
-                        color: "#BDBDBD !important",
-                      },
-                      root: {
-                        color: "#FFFFFF",
-                        background:
-                          "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)",
-                      },
-                      rootDisabled: {
-                        background: "#F0F0F0",
-                      },
-                    }}
-                    className={styles.newChatIcon}
-                    iconProps={{ iconName: "Add" }}
-                    onClick={newChat}
-                    disabled={disabledButton()}
-                    aria-label="start a new chat button"
-                  />
-                )}
+                    <CommandBarButton
+                      role="button"
+                      styles={chatButtonStyles}
+                      className={styles.newChatIcon}
+                      iconProps={{ iconName: "Add" }}
+                      onClick={newChat}
+                      disabled={disabledButton()}
+                      aria-label="start a new chat button"
+                      title="New chat"
+                    />
+                  )}
                 <CommandBarButton
                   role="button"
-                  styles={{
-                    icon: {
-                      color: "#FFFFFF",
-                    },
-                    iconDisabled: {
-                      color: "#BDBDBD !important",
-                    },
-                    root: {
-                      color: "#FFFFFF",
-                      background:
-                        "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)",
-                    },
-                    rootDisabled: {
-                      background: "#F0F0F0",
-                    },
-                  }}
+                  styles={chatButtonStyles}
                   className={styles.clearChatBroom}
                   iconProps={{ iconName: "Attach" }}
                   onClick={handleClick}
+                  title="Attach file"
                 >
                   <input
                     type="file"
@@ -1052,32 +1107,18 @@ const Chat = () => {
                 </CommandBarButton>
                 <CommandBarButton
                   role="button"
-                  styles={{
-                    icon: {
-                      color: "#FFFFFF",
-                    },
-                    iconDisabled: {
-                      color: "#BDBDBD !important",
-                    },
-                    root: {
-                      color: "#FFFFFF",
-                      background:
-                        "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)",
-                    },
-                    rootDisabled: {
-                      background: "#F0F0F0",
-                    },
-                  }}
+                  styles={chatButtonStyles}
                   className={
                     appStateContext?.state.isCosmosDBAvailable?.status !==
-                    CosmosDBStatus.NotConfigured
+                      CosmosDBStatus.NotConfigured
                       ? styles.clearChatBroom
                       : styles.clearChatBroomNoCosmos
                   }
                   iconProps={{ iconName: "Broom" }}
+                  title="Clear chat"
                   onClick={
                     appStateContext?.state.isCosmosDBAvailable?.status !==
-                    CosmosDBStatus.NotConfigured
+                      CosmosDBStatus.NotConfigured
                       ? clearChat
                       : newChat
                   }
@@ -1153,7 +1194,7 @@ const Chat = () => {
                   tabIndex={0}
                   title={
                     activeCitation.url &&
-                    !activeCitation.url.includes("blob.core")
+                      !activeCitation.url.includes("blob.core")
                       ? activeCitation.url
                       : activeCitation.title ?? ""
                   }
@@ -1176,7 +1217,7 @@ const Chat = () => {
             )}
           {appStateContext?.state.isChatHistoryOpen &&
             appStateContext?.state.isCosmosDBAvailable?.status !==
-              CosmosDBStatus.NotConfigured && <ChatHistoryPanel />}
+            CosmosDBStatus.NotConfigured && <ChatHistoryPanel />}
         </Stack>
       )}
     </div>
