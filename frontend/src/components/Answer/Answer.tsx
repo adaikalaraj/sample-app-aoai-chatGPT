@@ -16,8 +16,9 @@ import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
 import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { ThumbDislike20Filled, ThumbLike20Filled, Copy20Regular, Checkmark20Regular, ArrowClockwise20Regular, Square20Regular, Eye20Regular, Edit20Regular } from "@fluentui/react-icons";
 import { XSSAllowTags } from "../../constants/xssAllowTags";
-import { CodePreview } from "../CodePreview/CodePreview";
-import { CodeEditor } from "../CodeEditor/CodeEditor";
+import { CodePreview } from "./CodePreview/CodePreview";
+import { CodeEditor } from "./CodeEditor/CodeEditor";
+import { QuoteBlock, TextWithQuotes, ListItemWithQuotes } from "./QuoteBlock/QuoteBlock";
 
 interface Props {
     answer: AskResponse;
@@ -266,6 +267,9 @@ export const Answer = ({
 
     const components = {
         code: CodeBlock,
+        blockquote: QuoteBlock,
+        p: TextWithQuotes,
+        li: ListItemWithQuotes,
     };
     return (
         <>

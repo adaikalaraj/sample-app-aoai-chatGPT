@@ -1,0 +1,74 @@
+.quoteBlockWrapper {
+    position: relative;
+}
+
+.quoteBlock {
+    background: #f5f5f5;
+    border-left: 4px solid var(--color-secondary);
+    margin: 8px 0;
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+    color: #323130;
+}
+
+.quoteBlockActions {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    z-index: 1;
+    display: flex;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.quoteBlockWrapper:hover .quoteBlockActions {
+    opacity: 1;
+}
+
+.quoteBlockCopyButton {
+    background: rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    color: #616161;
+    cursor: pointer;
+    padding: 2px 6px;
+    font-size: 12px;
+    line-height: 16px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.quoteBlockCopyButton:hover {
+    background: rgba(0, 0, 0, 0.12);
+}
+
+.inlineQuoteWrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    background: #f0f0f0;
+    border-radius: 3px;
+    padding: 1px 4px;
+}
+
+.inlineQuote {
+    color: #323130;
+}
+
+.inlineQuoteCopyButton {
+    background: none;
+    border: none;
+    color: #616161;
+    cursor: pointer;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.inlineQuoteCopyButton:hover {
+    opacity: 1;
+}
